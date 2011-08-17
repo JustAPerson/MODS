@@ -1,1 +1,24 @@
-TEST
+Maximum Over Drive System
+Codename: MODS
+
+Stable Branch: Legacy
+Experimental: Current (not yet functional)
+
+Versions
+* Legacy: v1.0.1
+* Current: v2.1.0-pre-alpha
+
+Summary:
+MODS is a toolkit to aid in the coding of Lua Assembly.
+MODS includes a custom linker and assembler. Together they can easily be used to code in LASM.
+
+Change Log:
+    Current:
+        v2.1.0-alpha
+            - the assembler is done for the most part, macro implementation is left
+            - several directives still need to be implemented
+            - #include needs to be implemented
+            - testing needs to be conducted, it has only been minorly tested since v2.0.3-pre-alpa
+    Legacy:
+        v1.0.1-beta
+            - Second Debug() parameter, if true, the output can be parsable by v1 ParseLASM

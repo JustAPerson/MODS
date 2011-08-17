@@ -38,11 +38,17 @@ local OpSpecs = {
 	"CLOSURE",
 	"VARARG",
 
-	-- opcode = {opcode_number, enum_type, {parameter_types}}
-	-- enum_type:
-		-- ABC = 0
-		-- ABx = 1
-		-- AsBx = 2
+	-- opcode = {opcode_number, enum_type,  {parameter_types}, number_of_params}
+	enum = {
+		[0] = "ABC",
+		"ABx",
+		"AsBx",
+	},
+	list = {
+		"A",
+		"B",
+		"C",
+	},
 	-- Parameter types (likely to change):
 		-- Unused/Arbitrary = 0
 		-- Register 		= 1
@@ -51,47 +57,47 @@ local OpSpecs = {
 		-- Upvalue 			= 4
 		-- Jump Distace 	= 5
 
-	MOVE		= {0, 0,	{1, 1, 0}};
-	LOADK		= {1, 1,	{1, 2}};
-	LOADBOOL		= {2, 0,	{1, 0, 0}};
-	LOADNIL		= {3, 0,	{1, 1, 1}};
-	GETUPVAL		= {4, 0,	{1, 4}};
-	GETGLOBAL	= {5, 1,	{1, 2}};
-	GETTABLE		= {6, 0,	{1, 1, 3}};
-	SETGLOBAL	= {7, 1,	{1, 2}};
-	SETUPVAL		= {8, 0,	{1, 4}};
-	SETTABLE		= {9, 0,	{1, 3, 3}};
-	NEWTABLE		= {10, 0,	{1, 0, 0}};
-	SELF			= {11, 0,	{1, 1, 3}};
-	ADD			= {12, 0,	{1, 1, 3}};
-	SUB			= {13, 0,	{1, 1, 3}};
-	MUL			= {14, 0,	{1, 1, 3}};
-	DIV			= {15, 0,	{1, 1, 3}};
-	MOD			= {16, 0,	{1, 1, 3}};
-	POW			= {17, 0,	{1, 1, 3}};
-	UNM			= {18, 0,	{1, 1, 0}};
-	NOT			= {19, 0,	{1, 1, 0}};
-	LEN			= {20, 0,	{1, 1, 0}};
-	CONCAT		= {21, 0,	{1, 1, 1}};
-	JMP			= {22, 2,	{0, 5}};
-	EQ			= {23, 0,	{1, 3, 3}};
-	LT			= {24, 0,	{1, 3, 3}};
-	LE			= {25, 0,	{1, 3, 3}};
-	TEST			= {26, 0,	{1, 0, 1}};
-	TESTSET		= {27, 0,	{1, 1, 1}};
-	CALL			= {28, 0,	{1, 0, 0}};
-	TAILCALL		= {29, 0,	{1, 0, 0}};
-	RETURN		= {30, 0,	{1, 0, 0}};
-	FORLOOP		= {31, 2,	{1, 5}};
-	FORPREP		= {32, 2,	{1, 5}};
-	TFORLOOP		= {33, 0,	{1, 0}};
-	SETLIST		= {34, 0,	{1, 0, 0}};
-	CLOSE		= {35, 0,	{1, 0, 0}};
-	CLOSURE		= {36, 1,	{1, 0}};
-	VARARG		= {37, 0,	{1, 1, 0}};
+	MOVE			= {0, 0,	{1, 1, 5},	2};
+	LOADK			= {1, 1,	{1, 2},		2};
+	LOADBOOL		= {2, 0,	{1, 0, 0},	3};
+	LOADNIL			= {3, 0,	{1, 1, 1},	3};
+	GETUPVAL		= {4, 0,	{1, 4, 5},  2};
+	GETGLOBAL		= {5, 1,	{1, 2},		2};
+	GETTABLE		= {6, 0,	{1, 1, 3},	3};
+	SETGLOBAL		= {7, 1,	{1, 2},		2};
+	SETUPVAL		= {8, 0,	{1, 4, 5},	2};
+	SETTABLE		= {9, 0,	{1, 3, 3},	3};
+	NEWTABLE		= {10, 0,	{1, 0, 0},	3};
+	SELF			= {11, 0,	{1, 1, 3},	3};
+	ADD				= {12, 0,	{1, 1, 3},	3};
+	SUB				= {13, 0,	{1, 1, 3},	3};
+	MUL				= {14, 0,	{1, 1, 3},	3};
+	DIV				= {15, 0,	{1, 1, 3},	3};
+	MOD				= {16, 0,	{1, 1, 3},	3};
+	POW				= {17, 0,	{1, 1, 3},	3};
+	UNM				= {18, 0,	{1, 1, 5},	2};
+	NOT				= {19, 0,	{1, 1, 5},	2};
+	LEN				= {20, 0,	{1, 1, 5},	2};
+	CONCAT			= {21, 0,	{1, 1, 1},	3};
+	JMP				= {22, 2,	{0, 5},		1};
+	EQ				= {23, 0,	{1, 3, 3},	3};
+	LT				= {24, 0,	{1, 3, 3},	3};
+	LE				= {25, 0,	{1, 3, 3}, 	3};
+	TEST			= {26, 0,	{1, 5, 1},	2};
+	TESTSET			= {27, 0,	{1, 1, 1},	3};
+	CALL			= {28, 0,	{1, 0, 0},	3};
+	TAILCALL		= {29, 0,	{1, 0, 0},	3};
+	RETURN			= {30, 0,	{1, 0, 5},	2};
+	FORLOOP			= {31, 2,	{1, 0},		2};
+	FORPREP			= {32, 2,	{1, 0},		2};
+	TFORLOOP		= {33, 0,	{1, 5, 0},	2};
+	SETLIST			= {34, 0,	{1, 0, 0},	3};
+	CLOSE			= {35, 0,	{1, 5, 5},	1};
+	CLOSURE			= {36, 1,	{1, 0},		2};
+	VARARG			= {37, 0,	{1, 1, 5},	2};
 }
 
-bit = {
+local bit = {
 	new = function(str)
 		return tonumber(str, 2)
 	end,
@@ -138,7 +144,7 @@ local OpcodeEncode = function(op)
 	local c0, c1, c2, c3
 	if op.OpcodeType == "AsBx" then op.B = op.B + 131071 op.OpcodeType = "ABx" end
 	if op.OpcodeType == "ABx" then op.C = keep(op.B, 9); op.B = srb (op.B, 9) end
-	c0 = OpSpecs[op.Opcode] + slb(keep(op.A, 2), 6)
+	c0 = OpSpecs[op.Opcode][1] + slb(keep(op.A, 2), 6)
 	c1 = srb(op.A, 2) + slb(keep(op.C, 2), 6)
 	c2 = srb(op.C, 2) + slb(keep (op.B, 1), 7)
 	c3 = srb(op.B, 1)
@@ -234,6 +240,7 @@ DumpBinary = {
 local function Link(tab)
 	local chunk = "";
 	local function recurse(tab)
+
 		chunk = chunk .. DumpBinary.String(assert(tab.Name, "Invalid Prototype; proto.Name (nil)"));
 		chunk = chunk .. DumpBinary.Int32(assert(tab.FirstLine, "Invalid Prototype; proto.FirstLine (nil)"));
 		chunk = chunk .. DumpBinary.Int32(assert(tab.LastLine, "Invalid Prototype; proto.LastLine (nil"));
@@ -243,51 +250,50 @@ local function Link(tab)
 		chunk = chunk .. DumpBinary.Int8(assert(tab.MaxStackSize, "Invalid Prototype; proto.MaxStackSize (nil)"))
 
 		chunk = chunk .. DumpBinary.Int32(assert(tab.Instructions.Count, "Invalid Prototype; proto.NumberOfInstructions (nil)"))
-		for i=0, #tab.Instructions do
-			local ins = tab.Instructions[i];
-
+		for i=1, tab.Instructions.Count do
+			local ins = tab.Instructions[i - 1];
 			chunk = chunk .. OpcodeEncode(ins);
 		end
 
 		chunk = chunk .. DumpBinary.Int32(assert(tab.Constants.Count, "Invalid Prototype; proto.NumberOfConstants (nil)"))
-		for i=0, #tab.Constants do
-			local k = tab.Constants[i];
+		for i=1, tab.Constants.Count do
+			local k = tab.Constants[i-1];
 
 			if k.ConstantType == "nil" then
 				chunk = chunk .. DumpBinary.Int8(0);
-			elseif k.ConstantType == "Bool" then
+			elseif k.ConstantType == "bool" then
 				chunk = chunk .. DumpBinary.Int8(1)
 				chunk = chunk .. DumpBinary.Int8(k.Value and 1 or 0)
-			elseif k.ConstantType == "Number" then
+			elseif k.ConstantType == "number" then
 				chunk = chunk .. DumpBinary.Int8(3)
 				chunk = chunk .. DumpBinary.Float64(k.Value)
-			elseif k.ConstantType == "String" then
+			elseif k.ConstantType == "string" then
 				chunk = chunk .. DumpBinary.Int8(4)
 				chunk = chunk .. DumpBinary.String(k.Value)
 			end
 		end
 
 		chunk = chunk .. DumpBinary.Integer(assert(tab.Protos.Count, "Invalid Prototype; proto.NumberOfProtos (nil)"))
-		for i = 0, #tab.Protos do
-			recurse(tab.Protos[i])
+		for i = 1, tab.Protos.Count do
+			recurse(tab.Protos[i-1])
 		end
 
 		chunk = chunk .. DumpBinary.Int32(tab.Instructions.Count)
-		for i = 0, #tab.Instructions do
-			chunk = chunk .. DumpBinary.Int32(assert(tab.Instructions[i].LineNumber, "Invalid Instruction; instr.LineNumber (nil)"))
+		for i = 1, tab.Instructions.Count do
+			chunk = chunk .. DumpBinary.Int32(assert(tab.Instructions[i - 1].LineNumber, "Invalid Instruction; instr.LineNumber (nil)"))
 		end
 
 		chunk = chunk .. DumpBinary.Int32(assert(tab.Locals.Count, "Invalid Prototype; proto.NumberOfLocals (nil)"));
-		for i = 0, #tab.Locals do
-			local l = tab.Locals[i];
+		for i = 1, tab.Locals.Count do
+			local l = tab.Locals[i-1];
 			chunk = chunk .. DumpBinary.String(assert(l.Name, "Invalid Local; local.Name (nil)"))
 			chunk = chunk .. DumpBinary.Int32(assert(l.SPC, "Invalid Local; local.SPC (nil)"))
 			chunk = chunk .. DumpBinary.Int32(assert(l.EPC, "Invalid Local; local.EPC (nil)"))
 		end
 
-		chunk = chunk .. DumpBinary.Int32(assert(tab.NumberOfUpvalues, "Invalid Prototype; proto.NumberOfUpvalues (nil)"))
-		for i = 0, #tab.Upvalues do
-			chunk = chunk .. DumpBinary.String(assert(tab.Upvalues[i].Name, "Invalid Upvalue; upval.Name (nil)"));
+		chunk = chunk .. DumpBinary.Int32(assert(tab.Upvalues.Count, "Invalid Prototype; proto.NumberOfUpvalues (nil)"))
+		for i = 1, tab.Upvalues.Count do
+			chunk = chunk .. DumpBinary.String(assert(tab.Upvalues[i-1].Name, "Invalid Upvalue; upval.Name (nil)"));
 		end
 	end
 
@@ -405,13 +411,13 @@ local function Delink(chunk)
 					k.ConstantType = "nil";
 					k.Value = ""
 				elseif ty == 1 then
-					k.ConstantType = "Bool"
+					k.ConstantType = "bool"
 					k.Value = GetInt8() ~= 0
 				elseif ty == 3 then
-					k.ConstantType = "Number"
+					k.ConstantType = "number"
 					k.Value = GetFloat64();
 				elseif ty == 4 then
-					k.ConstantType = "String"
+					k.ConstantType = "string"
 					k.Value = GetTypeString():sub(1,-2);
 				end
 				constants[i-1] = k;
@@ -481,15 +487,15 @@ local function Delink(chunk)
 	return tab;
 end
 
-function exception(o)
+local function exception(o)
 	error( "["..o.type .. "]:" .. o.pos.line ..":" ..o.pos.char ..": " .. o.msg, 0)
 end
 
-function	warn(o)
-	print( "[" .. o.type .. "] :" .. o.pos.line ..":" ..o.pos.char..": " .. o.msg)
+local function	warn(o)
+	print( "[" .. o.type .. "] :" .. (o.pos or "unknown") ..": " .. o.msg)
 end
 
-function try(f, e)
+local function try(f, e)
 	local res = {pcall(f)}
 	if not res[1] then
 		if type(err) == "table" then
@@ -500,36 +506,36 @@ function try(f, e)
 	end
 end
 
-function lookupify(tb)
+local function lookupify(tb)
 	for k, v in pairs(tb) do
 		tb[v] = true
 	end
 	return tb
 end
 
-function trueFunc()
+local function trueFunc()
 	return true
 end
 
-function falseFunc()
+local function falseFunc()
 	return false
 end
 
 local isWhiteLookup = {["\n"] = true, ["\t"] = true, [" "] = true}
-function isWhite(ch)
+local function isWhite(ch)
 	return isWhiteLookup[ch]
 end
 
 local isDigitLow = ("0"):byte()
 local isDigitHigh = ("9"):byte()
-function isDigit(ch)
+local function isDigit(ch)
 	local n = ch:byte()
 	return n >= isDigitLow and n <= isDigitHigh
 end
 
 local isAlphaLow = ("a"):byte()
 local isAlphaHigh = ("z"):byte()
-function isAlpha(ch)
+local function isAlpha(ch)
 	local n = ch:lower():byte()
 	return (n >= isAlphaLow and n <= isAlphaHigh) or n == 95
 end
@@ -539,7 +545,8 @@ local directives = {}
 --
 -- TokenStream class
 --
-function MakeStream(str)
+local function MakeStream(str)
+	str = str .. "\n";
 	local len = #str
 	local ptr = 1
 	local line = 1
@@ -630,13 +637,19 @@ function MakeStream(str)
 
 	local keywords = {
 		".local",
+		".proto",
+		".end",
+		".options",
+		".upval",
 		".macro",
 	};
 	lookupify(keywords);
 
 	--symbol lookups
 	local symbols1 = {
-		":", ";", ".", ",", "(", ")", "[", "]", "{", "}", "=", "+", "-", "/", "*", "%";
+		":", ";", ".", ",",
+		"(", ")", "[", "]", "{", "}",
+		"=", "+", "-", "/", "*", "%", "^", "<", ">"
 	}
 	lookupify(symbols1)
 	local symbols2 = {
@@ -651,13 +664,17 @@ function MakeStream(str)
 		tk.isSymbol = (tk.type == "symbol") and function(sy)
 			if sy then
 				return tk.data == sy;
+			else
+				return true;
 			end
-
-			return true;
 		end or falseFunc
 		--
 		tk.isKeyword = (tk.type == "keyword") and function(kw)
-			return kw and tk.data == kw or true
+			if kw then
+				return tk.data == kw
+			else
+				return true;
+			end
 		end or falseFunc
 		--
 		tk.isIdent = (tk.type == "ident") and trueFunc or falseFunc
@@ -719,13 +736,13 @@ function MakeStream(str)
 			end
 			pushToken({type="number", data=num}, tbegin, mark())
 		elseif peek() == "\"" or peek() == "\'" then
-			local lookFor = get();
+			local lookFor = get()
 			--string, containing escape characters
 			local str = ""
 			while not get(lookFor) do
 				--unfinished string
 				if eof() then
-					exception{type="lex", msg="Unfinished string near <eof>", pos=mark()}
+					exception{type="lex", msg="Unfinished string (start: " .. tbegin.line ..":" .. tbegin.char .. ") near <eof>", pos=mark()}
 				end
 				--handle escape chars
 				if get("\\") then
@@ -758,8 +775,8 @@ function MakeStream(str)
 			local sy1 = peek()
 			local sy2 = peek()..peek(1)
 
-			if sy1 == "." and alpha(sy2) then	-- directives, gonna call 'em keywords though
-				local ident = "." .. sy2;
+			if sy1 == "." and alpha(peek(1)) then	-- directives, gonna call 'em keywords though
+				local ident = sy2;
 
 				get();
 				get();
@@ -774,16 +791,17 @@ function MakeStream(str)
 				get()
 				pushToken({type="symbol", data=sy2}, tbegin, mark())
 			elseif symbols1[sy1] then
-				get()
+				get();
 				pushToken({type="symbol", data=sy1}, tbegin, mark())
 			else
-				--nothing recognized by lexer
-				--exception{type="lex", msg="Bad input character `" .. sy1 .. "`", pos=mark()}
-				get()
+				if not eof() then
+					get();
+					exception{type="lex", msg="Bad input character `" .. sy1:byte() .. "`", pos=mark()}
+				end
 			end
 		end
 	end
-	pushToken{type="eof"}
+	pushToken({type="eof"}, mark(), mark())
 
 	--============================================
 	-- access, provide token stream functionality
@@ -889,7 +907,7 @@ function MakeStream(str)
 		if this.isSymbol(sy) then
 			return this.get()
 		else
-			err = err or "Expected `" .. sy .. "`"
+			err = err or "Expected " .. (sy and "`" .. sy .. "`") or "<symbol>";
 			exception{type="assembler", msg=err, pos=this.mark()}
 		end
 	end
@@ -907,7 +925,16 @@ function MakeStream(str)
 		if this.isKeyword(kw) then
 			return this.get()
 		else
-			err = err or "Expected <number>"
+			err = err or "Expected <keyword>"
+			exception{type="assembler", msg=err, pos=this.mark()}
+		end
+	end
+
+	this.expectString = function(s, err)
+		if this.isString(s) then
+			return this.get()
+		else
+			err = err or "Expected <string>"
 			exception{type="assembler", msg=err, pos=this.mark()}
 		end
 	end
@@ -917,134 +944,298 @@ end
 
 local directives = {
 	[".local"] = function(stream, state)
-		local list = {};
-		local c = 0;
+		local name = stream.expectString().data;
+		local sy, n1, n2 = stream.peek(), stream.peek(1), stream.peek(3)
+		local spc, epc;
 
-		while true do
-			if stream.isSting() then
-				list[#list + 1] = {name = stream.get(), ident = false, type = "local"}
-			elseif token.isIdent() then
-				list[#list + 1] = {name = stream.get(), ident = true, type = "local"}
-			else
-				exception{type="assembler", pos=stream.mark(), msg="<identifier / string> expected after `local` directive"};
+		if n1.isNumber() and n2.isNumber() then
+			for i = 1, 4 do
+				stream.get()
 			end
 
-			if not stream.isSymbol(",") then
-				break;
+			if sy.isSymbol("(") then
+				stream.expectSymbol(")", "`)` expected to close `(` in after `.local` directive");
 			end
+
+			spc, epc = n1, n2;
+		else
+			spc, epc = 0, 0;
 		end
 
-		if stream.consumeSymbol("=") then
-			while true do
-				c = c + 1;
-				list[c].value = stream.expectNumber();
+		state.Current:PushIdent{
+			type = "local";
+			name = name;
+			val = state.Current:PushLocal{
+				Name = name;
+				SPC = spc;
+				EPC = epc;
+			}
+		};
+	end,
+	[".proto"] = function(stream, state)
+		state.Current:NewProto();
+	end,
+	[".end"] = function(stream, state)
+		state.Current.LastLine = stream.mark().line;
+		state.Current = state.Current.Parent;
+	end,
+	[".upval"] = function(stream, state)
+		local name = stream.expectString("`string` expected after directive `.upval`").data;
 
-				if not stream.isSymbol(",") then
-					break;
+		state.Current:PushUpval{
+			Name = name;
+		}
+	end,
+	[".options"] = function(stream, state)
+		local msg = "directive `.options` requires 4 parameters seperated by commas";
+
+		state.Current.NumberOfUpalues = stream.expectNumber(msg).data;
+		stream.expectSymbol(",", msg);
+		state.Current.Arguments = stream.expectNumber(msg).data;
+		stream.expectSymbol(",", msg);
+		state.Current.VargFlag = stream.expectNumber(msg).data;
+		stream.expectSymbol(",", msg);
+		state.Current.MaxStackSize = stream.expectNumber(msg).data;
+
+		state.Current.Options = true;
+	end,
+	[".name"] = function(stream, state)
+		local name = stream.expectString();
+
+		state.Current.Name = name;
+		state.Current:PushIdent{
+			type = "proto";
+			name = name;
+			value = state.Current.num;
+		};
+	end,
+	[".macro"] = function(stream, state)
+		-- TODO .macro
+		-- Remember, no allowing of macros starting with "_"
+	end,
+};
+
+local function ParseStream(stream)
+	local state;
+
+	local function PushInstr(proto, int, a, b, c)
+		local x = proto.Instructions;
+		local y;
+		local pos = stream.mark();
+		proto.pc = proto.pc + 1;
+
+		x.Count = x.Count + 1;
+
+		y = {
+			pc = proto.pc;
+			Opcode = int:upper();
+			OpcodeType = OpSpecs.enum[OpSpecs[int:upper()][2]];
+			A = a;
+			B = b;
+			C = c;
+			LineNumber = pos.line;
+
+			Resolve = function(this)
+				local env = setmetatable({}, {__index = function(a, b)
+					if proto.Idents[b] then
+						return proto.Idents[b]:Resolve(y, pos);
+					else
+						exception{type="assembler", pos=pos, msg="Unknown identifier `" .. b .. "`" }
+					end
+				end});
+
+				local test = function(str, x)
+					local Func = function(_, a)
+						local choice = OpSpecs[this.Opcode][3][x];
+
+						if choice ~= 2 and choice ~= 3 then
+							exception{
+								type="assembler";
+								pos = pos;
+								msg = "The #"..x.." parameter of `" .. this.Opcode .. "` does not take a constant";
+							};
+						end
+
+						local i;
+						for z = 1, #proto.Constants do
+							local v = proto.Constants[z - 1];
+
+							if v == a then
+								return (choice == 2) and z - 1 or (choice == 3) and z + 255;
+							end
+						end
+
+						local f, e = loadstring("return " .. a);
+
+						if f then
+							f, e = pcall(f);
+
+							if not f then
+								error("I have no clue when this might happen, so contact me if it does");
+							end
+						else
+							error("I have no clue when this might happen, so contact me if it does");
+						end
+
+						local i = proto:PushConst{
+							ConstantType = type(e);
+							Value = e;
+						}
+
+						return (choice == 2) and i or (choice == 3) and i + 256;
+					end
+					str = str:gsub("(<(.-)>)", Func);
+					local f, e = loadstring("return " .. str);
+
+					if f then
+						setfenv(f, env);
+						f, e = pcall(f)
+
+						if f then
+							return e;
+						else
+							exception{type="assembler", pos=pos, msg=e};
+						end
+					else
+						exception{type="assembler", pos=pos, msg=e};
+					end
+				end
+
+				for i, v in ipairs(OpSpecs[this.Opcode][3]) do
+					local letter = OpSpecs.list[i];
+
+					if v ~= 5 then
+						this[letter] = test(this[letter], i);
+					else
+						this[letter] = 0;
+					end
 				end
 			end
+		};
+
+		x[x[0] and #x+1 or 0] = y;
+	end
+
+	local function PushIdent(this, val)
+		local a = this.Idents;
+
+		if a[val.name] then
+			warn{pos=stream.mark(), msg = "Overwriting pre-existing Identifer `" .. val.name .. "`"}
 		end
 
-		if c ~= #list then
-			for i = c + 1, #list do
-				list[i].value = state.Current.Locals[0] and #state.Current.Locals or 0;
+		val.pc = this.pc;
+		val.start = stream.mark();
+
+		function val.Resolve(this, instr, start)
+			if this.type == "label" then
+				return instr.pc + 1 - this.pc;
+			else
+				return this.value;
 			end
 		end
 
-		for i,v in next, list, nil do
-			state.Current:PushIdent(v)
+		a[val.name] = val;
+	end
 
-			if not v.ident then
+	local function PushUpval(this, val)
+		local a = this.Upvalues;
 
-			end
+		a.Count = a.Count + 1;
+		a[a[0] and #a+1 or 0] = val
+
+		return #a;
+	end
+
+	local function PushLocal(this, val)
+		local a = this.Locals;
+
+		a.Count = a.Count + 1;
+		a[a[0] and #a+1 or 0] = val;
+
+		return #a;
+	end
+
+	local function PushConst(this, val)
+		local a = this.Constants;
+
+		a.Count = a.Count + 1;
+		a[a[0] and #a+1 or 0] = val;
+
+		return #a;
+	end
+
+	local function NewProto(this)
+		local a = this.Protos;
+		local b = {
+			Parent = this;
+			Idents = {};
+
+			pc = 0;
+			num = a[0] and #a+1 or 0;
+
+			NumberOfUpvalues = 0;
+			Arguments = 0;
+			VargFlag = 0;
+			MaxStackSize = 0;
+
+			Name = "";
+			FirstLine = stream.mark().line;
+			Instructions = {Count = 0};
+			Constants = {Count = 0};
+			Protos = {Count = 0};
+			Locals = {Count = 0};
+			Upvalues = {Count = 0};
+
+			NewProto = NewProto;
+			PushInstr = PushInstr;
+			PushIdent = PushIdent;
+			PushUpval = PushUpval;
+			PushLocal = PushLocal;
+			PushConst = PushConst;
+		};
+
+		a.Count = a.Count + 1;
+
+		if a[0] then
+			a[#a + 1] = b;
+		else
+			a[0] = b;
 		end
-	end,
-}; 
 
-local function getExpression(stream)
-	
-end
+		state.Current = b;
 
-function ParseStream(stream)
-	local state;
+		return #a;
+	end
+
 	state = {
 		Main = {
 			Idents = {};
 
-			Instructions = {};
-			Constants = {};
-			Protos = {};
-			Locals = {};
-			Upvalues = {};
+			pc = 0;
+
+			NumberOfUpvalues = 0;
+			Arguments = 0;
+			VargFlag = 0;
+			MaxStackSize = 0;
+
+			Name = "";
+			FirstLine = 0;
+			Instructions = {Count = 0};
+			Constants = {Count = 0};
+			Protos = {Count = 0};
+			Locals = {Count = 0};
+			Upvalues = {Count = 0};
 		},
 
 		Macros = {};
-
-		NewProto = function(this)
-			local a = this.Protos;
-			local b = {
-				Parent = this;
-				Idents = {};
-
-				pc = 0;
-
-				Instructions = {};
-				Constants = {};
-				Protos = {};
-				Locals = {};
-
-				NewProto = state.NewProto;
-				PushInstr = state.PushInstr;
-				PushIdent = state.PushIdent;
-			};
-
-			if a[0] then
-				a[#a + 1] = b;
-			else
-				a[0] = a;
-			end
-
-			state.Current = b;
-
-			return b;
-		end,
-
-		PushInstr = function(this, int, a, b, c)
-			local x = this.Instructions;
-			local y = {}
-
-			x.pc = x.pc + 1;
-
-			y.pc = #x
-			y.OpcodeType = OpLookup[int].Type;
-			y.A = a;
-			y.B = b;
-			y.C = c;
-		end,
-
-		PushIdent = function(this, val)
-			local a = this.Idents;
-
-			if a[val.name] then
-				warn{pos=stream.mark(), msg = "Overwriting pre-existing Identifer `" .. val.name .. "`"}
-			end
-
-			val.pc = this.pc;
-			val.start = stream.mark();
-
-			function val.Resolve(this)
-				if this.type == "label" then
-					return state.Current.pc + 1 - this.pc;
-				else
-					return this.value;
-				end
-			end
-
-			a[val.name] = val;
-		end,
-
-
 	}
+
+	state.Main.NewProto = NewProto;
+	state.Main.PushInstr = PushInstr;
+	state.Main.PushIdent = PushIdent;
+	state.Main.PushUpval = PushUpval;
+	state.Main.PushLocal = PushLocal;
+	state.Main.PushConst = PushConst;
 
 	state.Current = state.Main;
 
@@ -1066,108 +1257,139 @@ function ParseStream(stream)
 			if stream.consumeSymbol(":") then
 				-- Token is a Label
 				state.Current:PushIdent{
-					name = token;
+					name = token.data;
 					type = "label";
 				};
 			else
-				-- TODO Token is an Instruction
-				
+				local instr = token.data;
+				local params = {};
+				local expression = "";
+				local c, macro;
+
+				while true do
+					token = stream.peek();
+
+					if token.isEof() or token.isIdent() or token.isKeyword() then
+						if stream.eof() or stream.isKeyword() then
+							params[#params + 1] = expression;
+							break;
+						elseif token.isIdent() then
+							if state.Macros[token.data] or OpSpecs[token.data:upper()] or stream.peek(1).isSymbol(":") then
+								params[#params + 1] = expression;
+								break;
+							else
+								stream.get();
+								expression = expression .. token.data .." ";
+							end
+						end
+					elseif stream.consumeSymbol(",") then
+						params[#params + 1] = expression;
+						expression = "";
+					elseif stream.consumeString() then
+						expression = expression .. token.lookFor .. token.data .. token.lookFor .. " ";
+					else
+						stream.get();
+						expression = expression .. token.data .. " ";
+					end
+				end
+
+				if instr:sub(1,1) ~= "_" and  state.Macros[instr] then
+					for i, v in next, state.Macros[instr], nil do
+						if v.Count == c then
+							-- TODO MACROS
+						end
+					end
+				else
+					if #params == OpSpecs[instr:upper()][4] then
+						state.Current:PushInstr(instr, unpack(params));
+					else
+						exception{type="assembler", pos = stream.mark(),
+							msg="Invalid number of arguments given to `" .. instr .. "`, got `" .. #params .. "`, expected `" .. OpSpecs[instr:upper()][4] .. "`"};
+					end
+				end
 			end
 		else
+			-- TODO exception when unexpected token
 			stream.get();
 		end
 	end
+
+	local function recurse(proto)
+		if not proto.Options then
+			warn{
+				type="assembler",
+				pos = proto.FirstLine;
+				msg = "`prototype` has unitiliazed parameters";
+			}
+		end
+
+		for i = 1, proto.Instructions.Count do
+			proto.Instructions[i - 1]:Resolve();
+		end
+
+		for i = 1, proto.Protos.Count do
+			recurse(proto.Protos[i - 1])
+		end;
+	end
+
+	state.Main.LastLine = stream.mark().line;
+	recurse(state.Main)
+
+	return state;
 end
 
-local stream;
-if Workspace then
-	stream = Workspace["[LuaASM]_MODS_[v2.0.0-pre-alpha]"].example.StringValue.Value;
-else
-	local file = io.open("example.lasm", "r");
-	stream = MakeStream(file:read("*all"));
-	file:close();
-end
-	ParseStream(stream);
 
---[[
-Old code is Old
-			elseif stream.consumeSymbol("(") then
-				-- TODO REMAKE `MACRO`s
-				-- Identifier is a Macro
-				local params = {};
+local function Preprocess(input)
+	local output = "";
+	local definitions = {};
 
-				-- gather parameters
-				if stream.isIdent() or stream.isNumber() or stream.isString() then
-					while true do
-						params[#params + 1] = stream.get();
+	for whitespace, line in input:gmatch("(%s*)(.-)\n") do
+		for i, v in next, definitions, nil do
+			line = line:gsub(i, v);
+		end
 
-						if stream.consumeSymbol(")") then
-							break;
-						end
+		if line:sub(1, 7) == "#define" then
+			local a, b = line:match("#define%s+(%w+)%s(.+)")
+			definitions[a] = b;
+
+			output = output .. "\n";
+
+		elseif line:sub(1, 8) == "#include" then
+			-- TODO Preprocessor: `#include`
+		else
+			local depth, type = 0;
+			local new = "";
+
+			for ch in line:gmatch(".") do
+				if ch == "\"" or ch == "\'" or ch == "[[" then
+					if ch == type then
+						depth = depth - 1;
+						type = nil;
+					else
+						depth = depth + 1;
+						type = ch;
 					end
 				end
 
-				if stream.consumeSymbol("{") then
-					-- We're defining the macro
-					local depth = 0;
-					local lastline = token.tend.line;
-					local loadstr = "return function(state, ";
-
-					for i,v in next, params, nil do
-						if not v.isIdent() then
-							exception{type="parse", msg="Expected <ident> in macro decleration", pos=this.mark()}
-						end
-
-						loadstr = loadstr .. v.data .. (i < #params and "," or ")");
-					end
-
-					while true do
-						local mini = stream.get(); -- new token
-						do
-							-- this whole shenanigans is to make sure that if the macro
-							-- errors, that the error will be on the same line as where the
-							-- macro is located in the lua asm source
-							local line = mini.tend.line;
-
-							if line > lastline then
-								loadstr = loadstr .. ("\n"):rep(line - lastline);
-								lastline = line;
-							end
-
-							if mini.data == "{" then
-								depth = depth + 1;
-							elseif mini.data == "}" then
-								if depth == 0 then
-									break;
-								else
-									depth = depth - 1;
-								end
-							end
-						end
-
-						if mini.isString() then
-							loadstr = loadstr .. " " .. mini.lookFor .. mini.data .. mini.lookFor;
-						else
-							loadstr = loadstr .. " " .. mini.data;
-						end
-					end
-
-					loadstr = loadstr .. "end";
-
-					if state.Macros[token.data] then
-
-
-					state.Macros[token.data] = loadstring(loadstr)();
-				else
-					-- We're calling the macro
-					for i, v in next, params, nil do
-						if v.isIdent() then
-							params[i] = state.Current.Idents[v.data];
-						else
-							params[i] = v.data;
-						end
-					end
-
-					state.Macros[token.data](state, unpack(params))
+				if ch == ";" and depth == 0 then
+					break;
 				end
- ]]
+
+				new = new .. ch;
+			end
+			
+			output = output .. whitespace .. new .. "\n";
+		end
+	end
+
+	return output;
+end
+
+local function Assemble(input)
+	local lasm = Preprocess(input);
+	local stream = MakeStream(lasm);
+	local object = ParseStream(stream);
+	return Link(object);
+end
+
+return {Link = Link, Delink = Delink, Assemble = Assemble};
