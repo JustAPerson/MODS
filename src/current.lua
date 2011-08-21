@@ -546,7 +546,6 @@ local directives = {}
 -- TokenStream class
 --
 local function MakeStream(str)
-	str = str .. "\n";
 	local len = #str
 	local ptr = 1
 	local line = 1
@@ -807,9 +806,13 @@ local function MakeStream(str)
 	-- access, provide token stream functionality
 	--============================================
 
-	local this = {}
+	local this = {tokens = tokens}
 	local mTPos = 1
 	local mEofToken = tokens[#tokens]
+
+	this.getPos = function()
+		return mTPos;
+	end
 
 	this.reset = function(pos)
 		mTPos = pos or 0
@@ -1012,6 +1015,95 @@ local directives = {
 	[".macro"] = function(stream, state)
 		-- TODO .macro
 		-- Remember, no allowing of macros starting with "_"
+
+		local name = stream.expectIdent().data;
+		local params = {};
+
+		if name:sub(1,1) == "_" then
+			exception{
+				type="assembler",
+				pos = stream.mark(),
+				msg = "Macro identifiers cannot start with an underscore",
+			}
+		end
+
+		local l = stream.expectSymbol("(", "`(` expected after " .. name);
+
+		while true do
+			if stream.isIdent() then
+				params[#params + 1] = stream.get().data;
+			elseif stream.consumeSymbol(")") then
+				break;
+			elseif stream.eof() then
+				exception{
+					type = "assembler";
+					pos = stream.mark();
+					msg = "`)` expected to close `(` on line " .. l.tend.line;
+				}
+			elseif not stream.consumeSymbol(",") then
+				exception{
+					type="assembler";
+					pos = stream.mark();
+					msg = "Unexpected symbol `" .. stream.peek().data .. "`";
+				}
+			end
+		end
+
+		local macro = {params = params, count = #params};
+		local depth = 1;
+
+		stream.expectSymbol("{");
+		macro.start = stream.getPos();
+
+		while true do
+			local token = stream.get();
+
+			if token.isSymbol("{") then
+				depth = depth + 1;
+			elseif token.isSymbol("}") then
+				depth = depth - 1;
+			end
+
+			if depth == 0 then
+				break;
+			else
+				macro.stop = stream.getPos();
+			end
+		end
+
+		if not state.Macros[name] then
+			local t = {};
+			t[#params] = macro;
+			state.Macros[name] = t;
+		else
+			if not state.Macros[name][#params] then
+				state.Macros[name][#params] = macro;
+			else
+				warn{
+					type="assembler",
+					pos = stream.mark().line,
+					msg = "Overwriting pre-existing macro `" .. name .. "`",
+				}
+			end
+		end
+	end,
+	[".const"] = function(stream, state)
+		local value = stream.get();
+
+		if value.isString() or value.isNumber or value.isIdent() then
+			if value.isIdent() and (value.data == "true" or value.data == "false" or value.data == "nil") then
+				return state.Current:PushIdent{
+					name = "k" .. (state.Current.Constants[0] and #state.Current.Constants or 0);
+					type = "const";
+					value = value.data
+				};
+			end
+		end
+		exception{
+			type = "assembler",
+			pos = value.tend;
+			msg = "Invalid constant value `" .. value.data .. "`";
+		}
 	end,
 };
 
@@ -1036,15 +1128,17 @@ local function ParseStream(stream)
 			LineNumber = pos.line;
 
 			Resolve = function(this)
+				local x;
 				local env = setmetatable({}, {__index = function(a, b)
 					if proto.Idents[b] then
-						return proto.Idents[b]:Resolve(y, pos);
+						return proto.Idents[b]:Resolve(y, pos, x);
 					else
 						exception{type="assembler", pos=pos, msg="Unknown identifier `" .. b .. "`" }
 					end
 				end});
 
-				local test = function(str, x)
+				local test = function(str, _)
+					x = _;
 					local Func = function(_, a)
 						local choice = OpSpecs[this.Opcode][3][x];
 
@@ -1120,15 +1214,31 @@ local function ParseStream(stream)
 		local a = this.Idents;
 
 		if a[val.name] then
-			warn{pos=stream.mark(), msg = "Overwriting pre-existing Identifer `" .. val.name .. "`"}
+			warn{
+				type = "assembler",
+				pos=stream.mark().line,
+				msg = "Overwriting pre-existing Identifer `" .. val.name .. "`"
+			}
 		end
 
 		val.pc = this.pc;
 		val.start = stream.mark();
 
-		function val.Resolve(this, instr, start)
+		function val.Resolve(this, instr, start, x)
 			if this.type == "label" then
 				return instr.pc + 1 - this.pc;
+			elseif this.type == "const"  then
+				local choice = OpSpecs[intstr.Opcode][3][x];
+
+				if choice ~= 2 and choice ~= 3 then
+					exception{
+						type="assembler";
+						pos = pos;
+						msg = "The #"..x.." parameter of `" .. this.Opcode .. "` does not take a constant";
+					};
+				end
+
+				return choice == 2 and this.value - 1 or this.value + 255;
 			else
 				return this.value;
 			end
@@ -1228,6 +1338,8 @@ local function ParseStream(stream)
 		},
 
 		Macros = {};
+		MacroStack = {};
+		InMacro = false;
 	}
 
 	state.Main.NewProto = NewProto;
@@ -1263,54 +1375,114 @@ local function ParseStream(stream)
 			else
 				local instr = token.data;
 				local params = {};
-				local expression = "";
+				local expression = {};
 				local c, macro;
+				local leaveMacro = false;
 
 				while true do
 					token = stream.peek();
 
+					if #state.MacroStack > 0 and state.MacroStack[#state.MacroStack][2] == stream.getPos() then
+						params[#params + 1] = #expression == 0 and nil or expression;
+						leaveMacro = true;
+						break;
+					end
+
 					if token.isEof() or token.isIdent() or token.isKeyword() then
-						if stream.eof() or stream.isKeyword() then
-							params[#params + 1] = expression;
+						if stream.isKeyword() or token.isEof() then
+							params[#params + 1] = #expression == 0 and nil or expression;
+							expression = {};
+							
 							break;
 						elseif token.isIdent() then
 							if state.Macros[token.data] or OpSpecs[token.data:upper()] or stream.peek(1).isSymbol(":") then
-								params[#params + 1] = expression;
+								params[#params + 1] = #expression == 0 and nil or expression;
+								expression = {};
+								
 								break;
 							else
 								stream.get();
-								expression = expression .. token.data .." ";
+								table.insert(expression, token);
 							end
 						end
 					elseif stream.consumeSymbol(",") then
-						params[#params + 1] = expression;
-						expression = "";
-					elseif stream.consumeString() then
-						expression = expression .. token.lookFor .. token.data .. token.lookFor .. " ";
+						params[#params + 1] = #expression == 0 and nil or expression;
+						expression = {};
 					else
 						stream.get();
-						expression = expression .. token.data .. " ";
+						table.insert(expression, token);
 					end
 				end
 
-				if instr:sub(1,1) ~= "_" and  state.Macros[instr] then
-					for i, v in next, state.Macros[instr], nil do
-						if v.Count == c then
-							-- TODO MACROS
-						end
+				if instr:sub(1,1) ~= "_" and state.Macros[instr] then
+					local v = state.Macros[instr][#params];
+
+					if not v then
+						exception{
+							type = "assembler",
+							pos = stream.mark(),
+							msg = "Undeclared Macro `" .. instr .. "` with " .. #params .. " params";
+						}
 					end
+
+					local newparams = {};
+
+					for i,v in pairs(params) do
+						newparams[state.Macros[instr][#params].params[i]] = v;
+					end
+
+					state.InMacro = true;
+					table.insert(state.MacroStack, {stream.getPos(), v.stop, params = newparams});
+					stream.reset(v.start);
 				else
+					for i,v in pairs(params) do
+						local str = "";
+
+						for _, t in pairs(v) do
+							if t.isString() then
+								str = str .. t.lookFor .. t.data .. t.lookFor;
+							elseif state.InMacro and t.isIdent() then
+								for _, t in pairs(state.MacroStack[#state.MacroStack].params[t.data]) do
+									if t.isString() then
+										str = str .. t.lookFor .. t.data .. t.lookFor;
+									else
+										str = str .. t.data;
+									end
+
+									str = str .. " ";
+								end
+							else
+								str = str .. t.data;
+							end
+
+							str = str .. " ";
+						end
+
+						params[i] = str;
+					end
+
 					if #params == OpSpecs[instr:upper()][4] then
 						state.Current:PushInstr(instr, unpack(params));
 					else
 						exception{type="assembler", pos = stream.mark(),
 							msg="Invalid number of arguments given to `" .. instr .. "`, got `" .. #params .. "`, expected `" .. OpSpecs[instr:upper()][4] .. "`"};
 					end
+					
+					if leaveMacro then
+						stream.reset(table.remove(state.MacroStack)[1]);
+
+						if #state.MacroStack == 0 then
+							state.InMacro = false;
+						end
+					end
 				end
 			end
 		else
-			-- TODO exception when unexpected token
-			stream.get();
+			exception{
+				type = "assembler",
+				pos = stream.mark(),
+				msg = "Unexpected <" .. token.type .."> " .. token.data
+			}
 		end
 	end
 
@@ -1340,6 +1512,7 @@ end
 
 
 local function Preprocess(input)
+	input = input .. "\n";
 	local output = "";
 	local definitions = {};
 
@@ -1377,7 +1550,7 @@ local function Preprocess(input)
 
 				new = new .. ch;
 			end
-			
+
 			output = output .. whitespace .. new .. "\n";
 		end
 	end

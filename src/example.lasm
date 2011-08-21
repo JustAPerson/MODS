@@ -1,0 +1,10 @@
+.options 0, 0, 0, 200 ; yay for large stacks!
+
+.macro print(s, msg){
+    getglobal   s,  <'print'>
+    loadk       s + 1,  msg
+    call        s,  2,  1
+}
+
+print   0, <"Omnimaga :)">      ; this line will be replaced with everything in the print macro (this is good for inlining functions and stuff)
+return  0,  0
