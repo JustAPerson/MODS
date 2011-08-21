@@ -1,3 +1,7 @@
+-- Big thanks to ExtendeD for developing ocLua in the first place!
+-- His code is wayyyy at the bottom.
+-- Note: The code Lua code in ocLASM.tns has been shrunken thanks to LuaSrcDiet.lua
+
 local OpSpecs = {
 	[0] = "MOVE",
 	"LOADK",
@@ -153,20 +157,6 @@ local OpcodeEncode = function(op)
 end
 
 local OpcodeChecks = {
-	MOVE = function(tab, ins)
-		assert(ins.C == 0, "Err: MOVE.C must equal 0")
-		assert(ins.A < tab.MaxStackSize, "Err: MOVE.A out of bounds")
-		assert(ins.B < tab.MaxStackSize, "Err: MOVE.B out of bounds")
-	end,
-	LOADK = function(tab, ins)
-		assert(ins.A < tab.MaxStackSize, "Err: LOADK.A out of bounds")
-		assert(ins.Bx < tab.NumberOfConstants, "Err: LOADK.Bx out of bounds")
-	end,
-	LOADBOOL = function(tab, ins)
-		assert(ins.A < tab.MaxStackSize, "Err: LOADBOOL.A out of bounds");
-		assert(ins.B < 2, "Err: LOADBOOL.B invalid value");
-		assert(ins.C < 2, "Err: LOADBOOL.C invalid value");
-	end,
 
 }
 setmetatable(OpcodeChecks, {__index = function() return function() end end})
@@ -1393,13 +1383,13 @@ local function ParseStream(stream)
 						if stream.isKeyword() or token.isEof() then
 							params[#params + 1] = #expression == 0 and nil or expression;
 							expression = {};
-							
+
 							break;
 						elseif token.isIdent() then
 							if state.Macros[token.data] or OpSpecs[token.data:upper()] or stream.peek(1).isSymbol(":") then
 								params[#params + 1] = #expression == 0 and nil or expression;
 								expression = {};
-								
+
 								break;
 							else
 								stream.get();
@@ -1468,7 +1458,7 @@ local function ParseStream(stream)
 						exception{type="assembler", pos = stream.mark(),
 							msg="Invalid number of arguments given to `" .. instr .. "`, got `" .. #params .. "`, expected `" .. OpSpecs[instr:upper()][4] .. "`"};
 					end
-					
+
 					if leaveMacro then
 						stream.reset(table.remove(state.MacroStack)[1]);
 
@@ -1566,4 +1556,80 @@ local function Assemble(input)
 	return Link(object);
 end
 
-return {Link = Link, Delink = Delink, Assemble = Assemble};
+--return {Link = Link, Delink = Delink, Assemble = Assemble};
+
+
+local __oc = {} -- localized for faster accessing (as if it mattered)
+
+toolpalette.register({})
+toolpalette.enablePaste(true)
+
+__oc.NEVER_RUN_CODE = true
+
+function __oc.copy_table(t)
+	local t2 = {}
+	for k,v in pairs(t) do
+		t2[k] = v
+	end
+	return t2
+end
+
+function __oc.trim(s)
+	return (string.gsub(s, "^%s*(.-)%s*$", "%1"))
+end
+
+function __oc.loadcode(code)
+	__oc.ERR = nil
+	local status, errcall = pcall(Assemble, code);
+	if not status then
+		__oc.ERR = errcall
+	else
+		local chunk, errload = loadstring(errcall)
+		if not chunk then
+			__oc.ERR = errload
+			platform.window:invalidate()
+		else
+			on = {} -- to find out which one are redefined
+			status, errcall = pcall(chunk)
+			if not status then
+				__oc.ERR = errcall
+			else
+				__oc.NEVER_RUN_CODE = false
+			end
+			platform.window:invalidate()
+			__oc.reload_handlers()
+		end
+	end
+end
+
+function __oc.reload_handlers()
+	__oc.on = __oc.copy_table(on) -- those defined by the program
+
+	on.paste = function() -- cannot be redefined
+		if clipboard.getText() then
+			__oc.loadcode(clipboard.getText())
+		end
+	end
+
+	on.paint = function(gc)
+		if __oc.ERR then
+			gc:setFont("sansserif", "r", 8)
+			local maxchars, y = 60, 10
+			for i = 1, #(__oc.ERR), maxchars do
+				gc:drawString(__oc.trim(string.sub(__oc.ERR, i, i + maxchars - 1)), 0, y)
+				y = y + 10
+			end
+		else
+			if __oc.on.paint then
+				__oc.on.paint(gc)
+			end
+		end
+		if __oc.ERR or __oc.NEVER_RUN_CODE then
+			gc:setFont("sansserif", "r", 8)
+			gc:drawString("Paste some LASM code here to run it", 85, 210)
+		end
+	end
+
+end
+
+__oc.reload_handlers()

@@ -1,9 +1,14 @@
 Maximum Over Drive System
 Codename: MODS
+Developers:
+    - NecroBumpist
+
+For documentation, check the proper file in \docs\.
+Like \docs\CURRENT.lua for documentation on v2.2
 
 Versions
 * Legacy: v1.0.1    (stable)
-* Current: v2.1.0-alpha     (very fragile, needs bug testing)
+* Current: v2.2.0-alpha     (fragile, needs bug testing)
 * Experimental: v3-pre-alpha
 
 Summary:
@@ -13,7 +18,6 @@ MODS includes a custom linker and assembler. Together they can easily be used to
 Notes:
     - test.lua is the script I do all of my testing from my IDE, and really should be ignored.
     - example.lasm is going to change often as I test out new features
-
 
 In development:
     - A NASM like Macro system
@@ -38,6 +42,10 @@ In development:
 
 Change Log:
     Current:
+    	v2.2.1:
+			- Minor correction in the way Link() handles Null strings
+			- \bin\ocLASM.tns is exactly like ocLua, except it uses LASM :D
+			(thanks to LuaSrcDiet for making it as small as possible, and ExtendeD for ocLua!)
         v2.2.0-alpha
             - General work on Assembler
             - Finished NASM like Macros.
