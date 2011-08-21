@@ -14,8 +14,6 @@ Notes:
     - test.lua is the script I do all of my testing from my IDE, and really should be ignored.
     - example.lasm is going to change often as I test out new features
 
-    -\bin\ now includes precompiled .tns files for anyone who wants to try it on their calcs
-    
 
 In development:
     - A NASM like Macro system
