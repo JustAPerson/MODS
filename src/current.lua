@@ -1027,14 +1027,14 @@ local directives = {
 		state.Current.Options = true;
 	end,
 	[".name"] = function(stream, state)
-		local name = stream.expectString();
+		local name = stream.expectString().data;
 
 		state.Current.Name = name;
-		state.Current:PushIdent{
+		--[[state.Current:PushIdent{
 			type = "proto";
 			name = name;
 			value = state.Current.num;
-		};
+		};]]
 	end,
 	[".macro"] = function(stream, state)
 		-- TODO .macro
