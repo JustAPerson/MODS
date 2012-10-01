@@ -174,19 +174,13 @@ setmetatable(OpcodeChecks, {__index = function() return function() end end})
 local DumpBinary
 DumpBinary = {
 	String = function(s)
-		return DumpBinary.Int32(#s+1)..s.."\0"
+		return DumpBinary.SizeT(#s+1)..s.."\0"
 	end,
 	SpecString = function(s)
-		return #s == 0 and "\0\0\0\0" or DumpBinary.Int32(#s+1) .. s .. "\0";
-	end,
-	Integer = function(n)
-		return DumpBinary.Int32(n)
+		return #s == 0 and "\0\0\0\0" or DumpBinary.SizeT(#s+1) .. s .. "\0";
 	end,
 	Int8 = function(n)
 		return string.char(n)
-	end,
-	Int16 = function(n)
-		error("DumpBinary::Int16() Not Implemented")
 	end,
 	Int32 = function(x)
 		local v = ""
@@ -207,6 +201,10 @@ DumpBinary = {
 			end
 		end
 		return v
+	end,
+	Int64 = function(x)
+		-- FIXME Actual 64 bit encoding.
+		return DumpBinary.Int32(x) .. "\0\0\0\0";
 	end,
 	Float64 = function(x)
 		local function grab_byte(v)
@@ -239,23 +237,23 @@ DumpBinary = {
 
 local function Link(tab)
 	local chunk = "";
-	local function recurse(tab)
 
+	local function recurse(tab)
 		chunk = chunk .. DumpBinary.SpecString(assert(tab.Name, "Invalid Prototype; proto.Name (nil)"));
-		chunk = chunk .. DumpBinary.Int32(assert(tab.FirstLine, "Invalid Prototype; proto.FirstLine (nil)"));
-		chunk = chunk .. DumpBinary.Int32(assert(tab.LastLine, "Invalid Prototype; proto.LastLine (nil"));
+		chunk = chunk .. DumpBinary.Int(assert(tab.FirstLine, "Invalid Prototype; proto.FirstLine (nil)"));
+		chunk = chunk .. DumpBinary.Int(assert(tab.LastLine, "Invalid Prototype; proto.LastLine (nil"));
 		chunk = chunk .. DumpBinary.Int8(assert(tab.NumberOfUpvalues, "Invalid Prototype; proto.NumberOfUpvalues (nil)"))
 		chunk = chunk .. DumpBinary.Int8(assert(tab.Arguments, "Invalid Prototype; proto.Arguments (nil)"))
 		chunk = chunk .. DumpBinary.Int8(assert(tab.VargFlag, "Invalid Prototype; proto.VargFlag (nil)"))
 		chunk = chunk .. DumpBinary.Int8(assert(tab.MaxStackSize, "Invalid Prototype; proto.MaxStackSize (nil)"))
 
-		chunk = chunk .. DumpBinary.Int32(assert(tab.Instructions.Count, "Invalid Prototype; proto.NumberOfInstructions (nil)"))
+		chunk = chunk .. DumpBinary.Int(assert(tab.Instructions.Count, "Invalid Prototype; proto.NumberOfInstructions (nil)"))
 		for i=1, tab.Instructions.Count do
 			local ins = tab.Instructions[i - 1];
 			chunk = chunk .. OpcodeEncode(ins);
 		end
 
-		chunk = chunk .. DumpBinary.Int32(assert(tab.Constants.Count, "Invalid Prototype; proto.NumberOfConstants (nil)"))
+		chunk = chunk .. DumpBinary.Int(assert(tab.Constants.Count, "Invalid Prototype; proto.NumberOfConstants (nil)"))
 		for i=1, tab.Constants.Count do
 			local k = tab.Constants[i-1];
 
@@ -273,31 +271,56 @@ local function Link(tab)
 			end
 		end
 
-		chunk = chunk .. DumpBinary.Integer(assert(tab.Protos.Count, "Invalid Prototype; proto.NumberOfProtos (nil)"))
+		chunk = chunk .. DumpBinary.Int(assert(tab.Protos.Count, "Invalid Prototype; proto.NumberOfProtos (nil)"))
 		for i = 1, tab.Protos.Count do
 			recurse(tab.Protos[i-1])
 		end
 
-		chunk = chunk .. DumpBinary.Int32(tab.Instructions.Count)
+		chunk = chunk .. DumpBinary.Int(tab.Instructions.Count)
 		for i = 1, tab.Instructions.Count do
-			chunk = chunk .. DumpBinary.Int32(assert(tab.Instructions[i - 1].LineNumber, "Invalid Instruction; instr.LineNumber (nil)"))
+			chunk = chunk .. DumpBinary.Int(assert(tab.Instructions[i - 1].LineNumber, "Invalid Instruction; instr.LineNumber (nil)"))
 		end
 
-		chunk = chunk .. DumpBinary.Int32(assert(tab.Locals.Count, "Invalid Prototype; proto.NumberOfLocals (nil)"));
+		chunk = chunk .. DumpBinary.Int(assert(tab.Locals.Count, "Invalid Prototype; proto.NumberOfLocals (nil)"));
 		for i = 1, tab.Locals.Count do
 			local l = tab.Locals[i-1];
 			chunk = chunk .. DumpBinary.String(assert(l.Name, "Invalid Local; local.Name (nil)"))
-			chunk = chunk .. DumpBinary.Int32(assert(l.SPC, "Invalid Local; local.SPC (nil)"))
-			chunk = chunk .. DumpBinary.Int32(assert(l.EPC, "Invalid Local; local.EPC (nil)"))
+			chunk = chunk .. DumpBinary.Int(assert(l.SPC, "Invalid Local; local.SPC (nil)"))
+			chunk = chunk .. DumpBinary.Int(assert(l.EPC, "Invalid Local; local.EPC (nil)"))
 		end
 
-		chunk = chunk .. DumpBinary.Int32(assert(tab.Upvalues.Count, "Invalid Prototype; proto.NumberOfUpvalues (nil)"))
+		chunk = chunk .. DumpBinary.Int(assert(tab.Upvalues.Count, "Invalid Prototype; proto.NumberOfUpvalues (nil)"))
 		for i = 1, tab.Upvalues.Count do
 			chunk = chunk .. DumpBinary.String(assert(tab.Upvalues[i-1].Name, "Invalid Upvalue; upval.Name (nil)"));
 		end
 	end
 
-	chunk = chunk .. '\27Lua\81\0\1\4\4\4\8\0'
+	local header = string.dump(function() end):sub(1, 12)
+	chunk = chunk .. header
+
+	-- Integer
+	if header:sub(8,8) == "\4" then
+		DumpBinary.Int = DumpBinary.Int32
+	elseif header:sub(8,8) == "\8" then
+		DumpBinary.Int = DumpBinary.Int64
+	else
+		error("Incompatible platform")
+	end
+
+	-- Size_t
+	if header:sub(9,9) == "\4" then
+		DumpBinary.SizeT = DumpBinary.Int32
+	elseif header:sub(9,9) == "\8" then
+		DumpBinary.SizeT = DumpBinary.Int64
+	else
+		error("Incompatible platform")
+	end
+
+	-- No platform I know of bothers with non-dword sized instructions
+	-- Besides, the encoding is in a different table
+
+	-- Not going to bother with number encoding yet.
+
 	recurse(tab.Main)
 
 	return chunk;
