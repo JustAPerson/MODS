@@ -1,0 +1,8 @@
+## IDE Stuff ##
+# IntelliJ
+.idea/*
+*.iml
+
+# Eclipse
+.buildpath
+.project
