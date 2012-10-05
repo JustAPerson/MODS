@@ -1,31 +1,31 @@
-local Delink  = require "delink"
-local OpSpecs = require "opcodes"
+local Delink  = require "current.delink"
+local OpSpecs = require "current.opcodes"
 
 -- Parameter decoding
-local dis_param_btable
-dis_param_btable = {
-	[0] = function(proto, p) return "" end,
-	[1] = function(proto, p) return p end,
-	[2] = function(proto, p)
-		local k = proto.Constants[p]
-		if k.ConstantType == "nil" then
-			return "<nil>"
-		elseif k.ConstantType == "bool" or k.ConstantType == "number" then
-			return ("<%s>"):format(k.Value)
-		elseif k.ConstantType == "string" then
-			return ("<%q>"):format(k.Value)
-		end
-	end,
-	[3] = function(proto, p)
-		if p > 255 then
-			return dis_param_btable[2](proto, p-256)
-		else
-			return p
-		end
-	end,
-	[4] = dis_param_btable[1],
-	[5] = dis_param_btable[1],
-}
+local dis_param_btable = {}
+dis_param_btable[0] = function(proto, p) return "" end
+dis_param_btable[1] = function(proto, p) return p end
+dis_param_btable[2] = function(proto, p)
+	local k = proto.Constants[p]
+	if k.ConstantType == "nil" then
+		return "<nil>"
+	elseif k.ConstantType == "bool" then
+		return ("<%s>"):format(tostring(k.Value))
+	elseif k.ConstantType == "number" then
+		return ("<%s>"):format(k.Value)
+	elseif k.ConstantType == "string" then
+		return ("<%q>"):format(k.Value)
+	end
+end
+dis_param_btable[3] = function(proto, p)
+	if p > 255 then
+		return dis_param_btable[2](proto, p-256)
+	else
+		return p
+	end
+end
+dis_param_btable[4] = dis_param_btable[1]
+dis_param_btable[5] = dis_param_btable[1]
 local function dis_param(proto, instr, n)
 	local spec = OpSpecs[instr.Opcode]
 	if n > spec[4] then return "" end
