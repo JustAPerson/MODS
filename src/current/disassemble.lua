@@ -80,9 +80,16 @@ local function dis_proto(proto, level)
 	end
 end
 
-return function(bytecode)
+local function disassemble(bytecode)
 	local chunk = Delink(bytecode)
 	local output = dis_proto(chunk.Main)
 	
 	return output
 end
+
+return {
+	disassemble = disassemble,
+	dis_proto   = dis_proto,
+	dis_instr   = dis_instr,
+	dis_param   = dis_param,
+}
