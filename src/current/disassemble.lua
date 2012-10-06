@@ -41,16 +41,19 @@ local function dis_instr(proto, instr)
 	local opcode = instr.Opcode
 	local spec = OpSpecs[opcode]
 	local a, b, c = "", "", ""
+	local format
 
 	a = dis_param(proto, instr, 1)
 	if spec[4] == 2 then
+		format = "%s %s, %s"
 		b = dis_param(proto, instr, 2)
 	elseif spec[4] == 3 then
+		format = "%s %s, %s"
 		b = dis_param(proto, instr, 2)
 		c = dis_param(proto, instr, 3)
 	end
 
-	return opcode, a, b, c
+	return format:format(opcode, a, b, c)
 end
 
 -- Function decoding
