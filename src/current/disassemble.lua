@@ -83,8 +83,13 @@ local function dis_proto(proto, level)
 	end
 end
 
-local function disassemble(bytecode)
-	local chunk = Delink(bytecode)
+local function disassemble(input)
+	if type(input) == "function" then
+		input = string.dump(input)
+	elseif type(input) ~= "string" or input:sub(1,1) ~= "\27" then
+		error("Invalid input", 2)
+	end
+	local chunk = Delink(input)
 	local output = dis_proto(chunk.Main)
 	
 	return output
