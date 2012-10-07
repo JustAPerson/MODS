@@ -1,3 +1,5 @@
+local bit = require "current.bit"
+local OpSpecs = require "current.opcodes"
 return function(chunk)
 	local bit = bit;
 	local index = 1

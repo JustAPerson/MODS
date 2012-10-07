@@ -96,8 +96,8 @@ local function disassemble(input)
 end
 
 return {
-	disassemble = disassemble,
-	dis_proto   = dis_proto,
-	dis_instr   = dis_instr,
-	dis_param   = dis_param,
+	disassemble = disassemble;
+	dis_proto   = dis_proto;
+	dis_instr   = dis_instr;
+	dis_param   = dis_param;
 }

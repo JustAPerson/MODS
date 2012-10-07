@@ -1,4 +1,5 @@
-local Link = require "link"
+local OpSpecs = require "current.opcodes"
+local Link = require "current.link"
 
 local function exception(o)
 	error( "["..o.type .. "]:" .. o.pos.line ..":" ..o.pos.char ..": " .. o.msg, 0)
@@ -1071,9 +1072,13 @@ local function Preprocess(input)
 	return output;
 end
 
-return function(input)
+local function Assemble(input)
 	local lasm = Preprocess(input);
 	local stream = MakeStream(lasm);
 	local object = ParseStream(stream);
 	return Link(object);
 end
+
+return {
+	assemble = Assemble;
+}
