@@ -48,7 +48,7 @@ local function dis_instr(proto, instr)
 		format = "%s %s, %s"
 		b = dis_param(proto, instr, 2)
 	elseif spec[4] == 3 then
-		format = "%s %s, %s"
+		format = "%s %s, %s, %s"
 		b = dis_param(proto, instr, 2)
 		c = dis_param(proto, instr, 3)
 	end
@@ -62,25 +62,29 @@ local function dis_proto(proto, level)
 	local output = ""
 
 	local function emit(str, ...)
-		output = ("%s\n%s%s"):format(output, ("\t"):rep(level), str:format(...))	
+		output = ("%s%s%s"):format(output, ("\t"):rep(level), str:format(...))
 	end
 
 	if proto.Name ~= "" then
-		emit(".name %q", proto.Name)
+		emit(".name %q\n", proto.Name)
 	end
 
-	emit(".options %d, %d, %d, %d", proto.NumberOfUpvalues,	proto.Arguments,
+	emit(".options %d, %d, %d, %d\n", proto.NumberOfUpvalues, proto.Arguments,
 		proto.VargFlag, proto.MaxStackSize)
 
-	local statements = {}
-	for ip, instr in next, proto.Instructions do
-		statements[ip] = dis_instr(proto, instr)
+	for i = 0, #proto.Instructions do
+		local instr = proto.Instructions[i]
+		emit(dis_instr(proto, instr) .. "\n")
 	end
-	
-	-- FIXME labels
-	for i, v in next, statements do
-		emit(v)
+
+	print("protos",proto.NumberOfProtos)
+	for i = 1, proto.NumberOfProtos do
+		i = i - 1
+		local nproto = proto.Protos[i]
+		emit(".proto; #%d\n%s\n.end\n", i, dis_proto(nproto, level+1))
 	end
+
+	return output
 end
 
 local function disassemble(input)
