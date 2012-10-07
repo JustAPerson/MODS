@@ -3,8 +3,8 @@ local OpSpecs = require "current.opcodes"
 
 -- Parameter decoding
 local dis_param_btable = {}
-dis_param_btable[0] = function(proto, p) return "" end
-dis_param_btable[1] = function(proto, p) return p end
+dis_param_btable[0] = function(proto, p) return p end
+dis_param_btable[1] = dis_param_btable[0]
 dis_param_btable[2] = function(proto, p)
 	local k = proto.Constants[p]
 	if k.ConstantType == "nil" then
@@ -24,8 +24,8 @@ dis_param_btable[3] = function(proto, p)
 		return p
 	end
 end
-dis_param_btable[4] = dis_param_btable[1]
-dis_param_btable[5] = dis_param_btable[1]
+dis_param_btable[4] = dis_param_btable[0]
+dis_param_btable[5] = dis_param_btable[0]
 local function dis_param(proto, instr, n)
 	local spec = OpSpecs[instr.Opcode]
 	if n > spec[4] then return "" end
