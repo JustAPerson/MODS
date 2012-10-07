@@ -21,6 +21,11 @@ return function(chunk)
 		local b = GetInt16()
 		return 65536*b + a
 	end
+	local function GetInt64()
+		local a = GetInt32()
+		local b = GetInt32()
+		return 2^32*b + a
+	end
 	local function GetFloat64()
 		local a = GetInt32()
 		local b = GetInt32()
