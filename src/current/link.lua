@@ -42,7 +42,7 @@ DumpBinary = {
 		return DumpBinary.SizeT(#s+1)..s.."\0"
 	end,
 	SpecString = function(s)
-		return #s == 0 and "\0\0\0\0" or DumpBinary.SizeT(#s+1) .. s .. "\0";
+		return #s == 0 and DumpBinary.SizeT(0) or DumpBinary.SizeT(#s+1) .. s .. "\0";
 	end,
 	Int8 = function(n)
 		return string.char(n)
