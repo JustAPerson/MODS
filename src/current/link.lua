@@ -141,9 +141,11 @@ return function(tab)
 			recurse(tab.Protos[i-1])
 		end
 
-		chunk = chunk .. DumpBinary.Int(tab.Instructions.Count)
-		for i = 1, tab.Instructions.Count do
-			chunk = chunk .. DumpBinary.Int(assert(tab.Instructions[i - 1].LineNumber, "Invalid Instruction; instr.LineNumber (nil)"))
+		local size = tab.Instructions[0].LineNumber and tab.Instructions.Count or 0
+		chunk = chunk .. DumpBinary.Int(size)
+		for i = 1, size do
+			local instr = tab.Instructions[i - 1]
+			chunk = chunk .. DumpBinary.Int(instr.LineNumber)
 		end
 
 		chunk = chunk .. DumpBinary.Int(assert(tab.Locals.Count, "Invalid Prototype; proto.NumberOfLocals (nil)"));
