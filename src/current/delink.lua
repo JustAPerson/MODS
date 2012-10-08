@@ -1,4 +1,4 @@
-return function (chunk)
+return function(chunk)
 	local bit = bit;
 	local index = 1
 	local tab = {}
@@ -29,29 +29,23 @@ return function (chunk)
 		end
 	end
 
-	local function GetString(len)
+	local function GetStringRaw(len)
 		local str = chunk:sub(index, index+len-1)
 		index = index + len
 		return str
 	end
 
-	local function GetTypeInt()
-		local a = GetInt8()
-		local b = GetInt8()
-		local c = GetInt8()
-		local d = GetInt8()
-		return d*16777216 + c*65536 + b*256 + a
+	local GetInt, GetSizeT
+
+	local function GetString()
+		return GetStringRaw(GetSizeT()):sub(1,-2)
 	end
-	local function GetTypeString()
-		local tmp = GetInt32()
-		if tab.SizeT == 8 then GetInt32() end
-		return GetString(tmp)
-	end
+
 	local function GetTypeFunction()
 		local tab = {}
-		tab.Name = GetTypeString():sub(1, -2);
-		tab.FirstLine = GetTypeInt();
-		tab.LastLine = GetTypeInt();
+		tab.Name = GetString();
+		tab.FirstLine = GetInt();
+		tab.LastLine = GetInt();
 		GetInt8() -- Upvalues
 		tab.Arguments = GetInt8();
 		tab.VargFlag = GetInt8()
@@ -60,7 +54,7 @@ return function (chunk)
 
 		do
 			local instructions = {};
-			local num = GetInt32()
+			local num = GetInt()
 
 			tab.NumberOfInstructions = num;
 			instructions.Count = num;
@@ -92,7 +86,7 @@ return function (chunk)
 
 		do
 			local constants = {};
-			local num = GetInt32()
+			local num = GetInt()
 
 			tab.NumberOfConstants = num;
 			constants.Count = num;
@@ -114,7 +108,7 @@ return function (chunk)
 					k.Value = GetFloat64();
 				elseif ty == 4 then
 					k.ConstantType = "string"
-					k.Value = GetTypeString():sub(1,-2);
+					k.Value = GetString();
 				end
 				constants[i-1] = k;
 			end
@@ -123,7 +117,7 @@ return function (chunk)
 
 		do
 			local protos = {};
-			local num = GetInt32()
+			local num = GetInt()
 
 			tab.NumberOfProtos = num;
 			protos.Count = num;
@@ -135,42 +129,41 @@ return function (chunk)
 			tab.Protos = protos
 		end
 		do
-			local numsrc = GetInt32()
+			local numsrc = GetInt()
 
 			for i = 1, numsrc do
-				tab.Instructions[i-1].LineNumber = GetInt32();
+				tab.Instructions[i-1].LineNumber = GetInt();
 			end
 
 			local locals = {};
-			local numlocal = GetInt32()
+			local numlocal = GetInt()
 			tab.NumberOfLocals = numlocal;
 			locals.Count = numlocal;
 			tab.Locals = locals;
 
 			for i = 1, numlocal do
 				locals[i-1] = {
-					Name = GetTypeString():sub(1,-2),
-					SPC = GetInt32(),
-					EPC = GetInt32(),
+					Name = GetString(),
+					SPC = GetInt(),
+					EPC = GetInt(),
 				};
 			end
 
-			local numups = GetInt32()
+			local numups = GetInt()
 			local ups = {Count = numups}
 			tab.NumberOfUpvalues = numups;
 			tab.Upvalues = ups;
 
 			for i = 1, numups do
-				ups[i-1] = {Name = GetTypeString():sub(1, -2)};
+				ups[i-1] = {Name = GetString()};
 			end
 		end
 
 		return tab;
 	end
 
-	assert(chunk:sub(1,12) == '\27Lua\81\0\1\4\4\4\8\0', "Unsupported Bytecode format")
-
-	tab.Identifier = GetString(4)
+	--assert(chunk:sub(1,12) == '\27Lua\81\0\1\4\4\4\8\0', "Unsupported Bytecode format")
+	tab.Identifier = GetStringRaw(4)
 	tab.Version = GetInt8()
 	tab.Format = GetInt8() == 0 and "Official" or "Unofficial"
 	tab.BigEndian = GetInt8() == 0
@@ -179,6 +172,29 @@ return function (chunk)
 	tab.InstructionSize = GetInt8()
 	tab.NumberSize = GetInt8()
 	tab.FloatingPoint = GetInt8() == 0
+
+	-- TODO refactor this
+	assert(tab.Identifier == "\27Lua", "Unsupported Bytecode format")
+	assert(tab.Version == 0x51, "Unsupported Bytecode format")
+	assert(not tab.BigEndian, "Unsupported Bytecode format")
+	assert(tab.IntSize == 4 or tab.IntSize == 8, "Unsupported Bytecode format")
+	assert(tab.SizeT   == 4 or tab.SizeT   == 8, "Unsupported Bytecode format")
+	assert(tab.InstructionSize == 4, "Unsupported Bytecode format")
+	assert(tab.NumberSize == 8, "Unsupported Bytecode format")
+	assert(tab.FloatingPoint, "Unsupported Bytecode format")
+
+	if tab.IntSize == 4 then
+		GetInt = GetInt32
+	elseif tab.IntSize == 8 then
+		GetInt = GetInt64
+	end
+
+	if tab.SizeT == 4 then
+		GetSizeT = GetInt32
+	elseif tab.SizeT == 8 then
+		GetSizeT = GetInt64
+	end
+
 	tab.Main = GetTypeFunction()
 	return tab;
 end
