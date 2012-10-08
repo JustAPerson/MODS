@@ -60,7 +60,6 @@ end
 local function dis_proto(proto, level)
 	level = level or 0
 	local output = ""
-
 	local function emit(str, ...)
 		output = ("%s%s%s"):format(output, ("\t"):rep(level), str:format(...))
 	end
@@ -68,22 +67,24 @@ local function dis_proto(proto, level)
 	if proto.Name ~= "" then
 		emit(".name %q\n", proto.Name)
 	end
-
 	emit(".options %d, %d, %d, %d\n", proto.NumberOfUpvalues, proto.Arguments,
 		proto.VargFlag, proto.MaxStackSize)
 
-	for i = 0, #proto.Instructions do
+	for i = 0, proto.Locals.Count-1 do
+		local l = proto.Locals[i]
+		emit(".local %q (%d, %d); #%d\n", l.Name, l.SPC, l.EPC, i)
+	end
+	for i = 0, proto.Upvalues.Count-1 do
+		emit(".upval %q; #%d\n", proto.Upvalues[i].Name, i)
+	end
+	for i = 0, proto.Instructions.Count-1 do
 		local instr = proto.Instructions[i]
 		emit(dis_instr(proto, instr) .. "\n")
 	end
-
-	print("protos",proto.NumberOfProtos)
-	for i = 1, proto.NumberOfProtos do
-		i = i - 1
+	for i = 0, proto.Protos.Count-1 do
 		local nproto = proto.Protos[i]
-		emit(".proto; #%d\n%s\n.end\n", i, dis_proto(nproto, level+1))
+		emit(".proto; #%d\n%s.end\n", i, dis_proto(nproto, level+1))
 	end
-
 	return output
 end
 
