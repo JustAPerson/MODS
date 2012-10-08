@@ -474,7 +474,7 @@ local directives = {
 				stream.expectSymbol(")", "`)` expected to close `(` in after `.local` directive");
 			end
 
-			spc, epc = n1, n2;
+			spc, epc = n1.data, n2.data;
 		else
 			spc, epc = 0, 0;
 		end
