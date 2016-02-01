@@ -2,7 +2,7 @@
 
 -- Lua only supports absolute paths for file inclusion
 -- So append the search path to include our directories
-package.path = package.path .. ";src/?.lua;mods/src/?.lua"
+package.path = package.path .. ";src/?.lua;MODS/src/?.lua"
 local libmods = {
 	assemble    = require "assemble".assemble;
 	disassemble = require "disassemble".disassemble;
