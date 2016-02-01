@@ -25,13 +25,14 @@ end
 local config = {
 	input = nil,
 	output = nil,
+	strip = false
 }
 local free = 0;
 
 local i = 1;
 while (i <= #args) do
 	local arg = args[i]
-	if arg == "-o" then
+	if arg == "-o" or arg == "--output" then
 		local path = args[i + 1]
 		if not path then
 			error("Expected output file path after `-o` flag")
@@ -39,6 +40,9 @@ while (i <= #args) do
 
 		config.output = path
 		i = i + 2
+	elseif arg == "-s" or arg == "--strip" then
+		config.strip = true
+		i = i + 1
 	else
 		if config.input then
 			-- already chosen input, unknown option
@@ -64,19 +68,25 @@ if not config.output then
 	config.output = path .. ".luac"
 end
 
-local input_file = io.open(config.input)
+local input_file = io.open(config.input, "r")
 if not input_file then
 	error("Unable to open input file: " .. config.input)
 end
+
+local input_contents = input_file:read("*all")
+input_file:close()
+
+local output_contents
+if config.strip then
+	output_contents = libmods.strip(input_contents)
+else
+	output_contents = libmods.assemble(input_contents)
+end
+
 local output_file = io.open(config.output, "w")
 if not output_file then
 	error("Unable to open output file: " .. config.output)
 end
+output_file:write(output_contents)
 
-local input_contents = input_file:read("*all")
-local bytecode = libmods.assemble(input_contents)
-
-output_file:write(bytecode)
-
-input_file:close()
 output_file:close()
