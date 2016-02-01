@@ -1,5 +1,5 @@
-local delink = require "current.delink"
-local link   = require "current.link"
+local delink = require "delink"
+local link   = require "link"
 
 local function strip_proto(proto)
 	proto.Name = ""

@@ -1,5 +1,5 @@
-local bit = require "current.bit"
-local OpSpecs = require "current.opcodes"
+local bit = require "bit"
+local OpSpecs = require "opcodes"
 
 return function(chunk)
 	local bit = bit;

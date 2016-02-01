@@ -1,5 +1,5 @@
-local OpSpecs = require "current.opcodes"
-local Link = require "current.link"
+local OpSpecs = require "opcodes"
+local Link = require "link"
 
 local function exception(o)
 	error( "["..o.type .. "]:" .. o.pos.line ..":" ..o.pos.char ..": " .. o.msg, 0)

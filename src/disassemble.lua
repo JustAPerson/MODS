@@ -1,5 +1,5 @@
-local Delink  = require "current.delink"
-local OpSpecs = require "current.opcodes"
+local Delink  = require "delink"
+local OpSpecs = require "opcodes"
 
 -- Parameter decoding
 local dis_param_btable = {}
