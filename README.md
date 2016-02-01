@@ -14,9 +14,7 @@ $ ./mods input.lasm -o output.luac
 | flags | description |
 |---|---|
 | `-o` / `--output` | Change output file |
-|---|---|
 | `-s` / `--strip`  | Strips debugging information of existing bytecode |
-|---|---|
 
 
 ### Library
