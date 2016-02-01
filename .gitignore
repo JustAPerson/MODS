@@ -6,3 +6,6 @@
 # Eclipse
 .buildpath
 .project
+
+# Vim
+**/*.*.sw*
