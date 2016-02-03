@@ -25,7 +25,8 @@ end
 local config = {
 	input = nil,
 	output = nil,
-	strip = false
+	strip = false,
+	disassemble = false,
 }
 local free = 0;
 
@@ -39,10 +40,11 @@ while (i <= #args) do
 		end
 
 		config.output = path
-		i = i + 2
+		i = i + 1 -- skip extra element
 	elseif arg == "-s" or arg == "--strip" then
 		config.strip = true
-		i = i + 1
+	elseif arg == "-d" or arg == "--disassemble" then
+		config.disassemble = true
 	else
 		if config.input then
 			-- already chosen input, unknown option
@@ -50,22 +52,12 @@ while (i <= #args) do
 		end
 
 		config.input = arg
-		i = i + 1
 	end
+	i = i + 1
 end
 
 if not config.input then
 	error("No input file specified")
-end
-if not config.output then
-	-- no output specified, change file extension of input
-	local path = config.input:match("(.+)%.")
-	if not path then
-		-- path has no file extension?
-		path = config:match("(.+)")
-	end
-
-	config.output = path .. ".luac"
 end
 
 local input_file = io.open(config.input, "r")
@@ -77,16 +69,40 @@ local input_contents = input_file:read("*all")
 input_file:close()
 
 local output_contents
-if config.strip then
-	output_contents = libmods.strip(input_contents)
+if config.disassemble then
+	if config.strip then
+		error("Cannot strip debug information from disassembly")
+	end
+
+	output_contents = libmods.disassemble(input_contents)
 else
-	output_contents = libmods.assemble(input_contents)
+	if config.strip then
+		output_contents = libmods.strip(input_contents)
+
+	else
+		output_contents = libmods.assemble(input_contents)
+	end
+
+	-- these operations cannot reasonably be emitted to stdout
+	if not config.output then
+		-- no output specified, change file extension of input
+		local path = config.input:match("(.+)%.")
+		if not path then
+			-- path has no file extension?
+			path = config:match("(.+)")
+		end
+		config.output = path .. ".luac"
+	end
 end
 
-local output_file = io.open(config.output, "w")
-if not output_file then
-	error("Unable to open output file: " .. config.output)
+-- output to file if specified, otherwise stdout
+if config.output then
+	local output_file = io.open(config.output, "w")
+	if not output_file then
+		error("Unable to open output file: " .. config.output)
+	end
+	output_file:write(output_contents)
+	output_file:close()
+else
+	print(output_contents)
 end
-output_file:write(output_contents)
-
-output_file:close()
